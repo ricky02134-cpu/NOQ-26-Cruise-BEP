@@ -3,92 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공연 손익 계산기</title>
+<title>'26 CRUISE 손익 계산기</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #ffffff; --bg-2: #f8f9fa; --text: #1a1a1a;
-    --purple: #534AB7; --teal: #0F6E56; --coral: #993C1D; --border: #e9ecef;
+    --primary: #534AB7; --primary-light: #EEEDFE;
+    --success: #0F6E56; --error: #993C1D;
+    --gray-100: #f8f9fa; --gray-200: #e9ecef; --text: #1a1a1a;
   }
-  body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg-2); color: var(--text); line-height: 1.5; padding: 15px; }
-  .container { max-width: 600px; margin: 0 auto; }
-  h1 { font-size: 20px; text-align: center; margin-bottom: 15px; color: var(--purple); }
-  .card { background: var(--bg); border-radius: 16px; padding: 18px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-  h3 { font-size: 15px; margin-bottom: 12px; border-left: 4px solid var(--purple); padding-left: 8px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { font-family: 'Pretendard', sans-serif; background: #f0f2f5; color: var(--text); padding: env(safe-area-inset-top) 15px; }
+  .container { max-width: 500px; margin: 0 auto; padding-bottom: 40px; }
   
-  /* 슬라이더 스타일 */
-  .slider-container { background: var(--purple); color: white; padding: 20px; border-radius: 16px; margin-bottom: 15px; text-align: center; }
-  .slider-container input { width: 100%; margin-top: 10px; accent-color: #fff; }
-  .occ-value { font-size: 28px; font-weight: 800; margin: 5px 0; }
+  /* Header & Stats */
+  header { padding: 25px 0; text-align: center; }
+  header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--primary); }
+  
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: white; border-radius: 20px; font-size: 11px; margin-top: 8px; border: 1px solid var(--gray-200); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; }
+  .dot.active { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
 
-  .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .input-group { margin-bottom: 10px; }
-  label { display: block; font-size: 11px; color: #666; margin-bottom: 3px; }
-  input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fafafa; }
+  /* Top Dashboard Card */
+  .dash-card { background: var(--primary); color: white; border-radius: 24px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(83, 74, 183, 0.2); }
+  .dash-label { font-size: 13px; opacity: 0.8; margin-bottom: 5px; }
+  .dash-main { font-size: 32px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: baseline; gap: 5px; }
+  .dash-main small { font-size: 16px; font-weight: 400; }
   
-  .result-row { display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; font-size: 16px; }
-  .sync-tag { font-size: 10px; text-align: right; color: var(--teal); margin-bottom: 5px; }
-  #chart-container { height: 250px; }
+  .slider-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 16px; }
+  input[type=range] { width: 100%; height: 6px; border-radius: 3px; accent-color: white; cursor: pointer; }
+  
+  /* Section Cards */
+  .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(0,0,0,0.05); }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; }
+  
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .input-item label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; padding-left: 2px; }
+  .input-item input { width: 100%; padding: 10px; border: 1.5px solid var(--gray-100); border-radius: 10px; font-size: 14px; font-weight: 600; transition: 0.2s; }
+  .input-item input:focus { border-color: var(--primary); outline: none; background: var(--primary-light); }
+
+  .summary-row { display: flex; justify-content: space-between; padding-top: 15px; margin-top: 15px; border-top: 1px dashed var(--gray-200); font-weight: 700; }
+  .total-val { color: var(--error); }
+  .revenue-val { color: var(--success); }
+
+  #bepChart { margin-top: 10px; }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>'26 CRUISE 손익 계산</h1>
-
-  <div class="slider-container">
-    <p>예상 객석 점유율</p>
-    <div class="occ-value"><span id="occ-label">80</span>%</div>
-    <input type="range" id="occ-slider" min="0" max="100" value="80" oninput="updateAll()">
-    <p style="font-size: 13px; opacity: 0.9; margin-top: 10px;">
-      손익분기점(BEP)까지 <span id="bep-display" style="font-weight:bold;">-</span>회차 필요
-    </p>
-  </div>
-
-  <div class="card">
-    <div class="sync-tag" id="sync-status">데이터 동기화 중...</div>
-    <h3>📊 상세 지출 예산 (Fixed Cost)</h3>
-    <div class="input-grid">
-      <div class="input-group"><label>작품개발비(로열티)</label><input type="number" id="cost_dev"></div>
-      <div class="input-group"><label>공연장 대관료</label><input type="number" id="cost_venue_main"></div>
-      <div class="input-group"><label>연습실 대관료</label><input type="number" id="cost_venue_prac"></div>
-      <div class="input-group"><label>배우 인건비</label><input type="number" id="cost_cast"></div>
-      <div class="input-group"><label>크리에이티브팀</label><input type="number" id="cost_creative"></div>
-      <div class="input-group"><label>제작/기술운영</label><input type="number" id="cost_tech"></div>
-      <div class="input-group"><label>스탭 및 크루</label><input type="number" id="cost_crew"></div>
-      <div class="input-group"><label>무대/소품 제작</label><input type="number" id="cost_stage"></div>
-      <div class="input-group"><label>의상/분장 제작</label><input type="number" id="cost_dress"></div>
-      <div class="input-group"><label>프로덕션 식대</label><input type="number" id="cost_meal"></div>
-      <div class="input-group"><label>홍보마케팅</label><input type="number" id="cost_mktg"></div>
-      <div class="input-group"><label>예비비</label><input type="number" id="cost_reserve"></div>
+  <header>
+    <h1>'26 CRUISE <span style="font-weight: 300;">PROFIT</span></h1>
+    <div class="status-badge">
+      <div id="sync-dot" class="dot"></div>
+      <span id="sync-text">시트 연결 확인 중...</span>
     </div>
-    <div class="result-row" style="border-top: 1px solid var(--border); padding-top: 10px; color: var(--coral);">
-      <span>총 지출 합계</span>
-      <span id="total-cost-display">0원</span>
+  </header>
+
+  <div class="dash-card">
+    <p class="dash-label">예상 순이익</p>
+    <div class="dash-main"><span id="profit-display">0</span> <small>원</small></div>
+    
+    <div class="slider-box">
+      <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+        <span>목표 점유율</span>
+        <span style="font-weight: 700;"><span id="occ-label">80</span>%</span>
+      </div>
+      <input type="range" id="occ-slider" min="0" max="100" value="80" oninput="updateAll()">
+      <p style="font-size: 11px; margin-top: 10px; text-align: center; opacity: 0.8;">
+        BEP 달성까지 <b><span id="bep-display">-</span></b>회차 공연 필요 (매진 기준)
+      </p>
     </div>
   </div>
 
   <div class="card">
-    <h3>🎟 티켓 수익 설정</h3>
-    <div class="input-grid">
-      <div class="input-group"><label>티켓 정가</label><input type="number" id="faceValue" value="50000" oninput="updateAll()"></div>
-      <div class="input-group"><label>평균 할인율(%)</label><input type="number" id="discountRate" value="20" oninput="updateAll()"></div>
-      <div class="input-group"><label>초대권 비율(%)</label><input type="number" id="invitationRate" value="10" oninput="updateAll()"></div>
-      <div class="input-group"><label>판매 수수료(%)</label><input type="number" id="commRate" value="10" oninput="updateAll()"></div>
+    <div class="card-title">💸 예산 상세 분류</div>
+    <div class="grid">
+      <div class="input-item"><label>작품개발(로열티)</label><input type="number" id="cost_dev" oninput="updateAll()"></div>
+      <div class="input-item"><label>대관료(공연+연습)</label><input type="number" id="cost_venue" oninput="updateAll()"></div>
+      <div class="input-item"><label>배우 인건비</label><input type="number" id="cost_cast" oninput="updateAll()"></div>
+      <div class="input-item"><label>제작 및 운영비</label><input type="number" id="cost_prod" oninput="updateAll()"></div>
+      <div class="input-item"><label>홍보마케팅</label><input type="number" id="cost_mktg" oninput="updateAll()"></div>
+      <div class="input-item"><label>예비비</label><input type="number" id="cost_reserve" oninput="updateAll()"></div>
     </div>
-    <div class="result-row" style="color: var(--teal);">
-      <span>예상 순매출</span>
-      <span id="total-rev-display">0원</span>
+    <div class="summary-row">
+      <span>총 제작비용</span>
+      <span class="total-val" id="total-cost-display">0원</span>
     </div>
   </div>
 
   <div class="card">
-    <canvas id="bepChart"></canvas>
+    <div class="card-title">🎟 티켓 및 정산</div>
+    <div class="grid">
+      <div class="input-item"><label>티켓 정가</label><input type="number" id="faceValue" value="50000" oninput="updateAll()"></div>
+      <div class="input-item"><label>판매 수수료(%)</label><input type="number" id="commRate" value="10" oninput="updateAll()"></div>
+    </div>
+    <div class="summary-row">
+      <span>회당 예상 매출</span>
+      <span class="revenue-val" id="rev-per-show-display">0원</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <canvas id="bepChart" height="200"></canvas>
   </div>
 </div>
 
 <script>
+// 구글 시트 CSV 주소 (게시된 링크)
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_PB0S8EmyWb4sajbBesxslCR2GYjjBdRafk-vI6mDouKvqnULa4hwtSi12oCUOg/pub?gid=293246163&single=true&output=csv";
 
 async function loadBudgetData() {
@@ -97,29 +118,22 @@ async function loadBudgetData() {
     const text = await response.text();
     const rows = text.split('\n').map(row => row.split(','));
     
-    // 시트 인덱스 정밀 매핑 (B열 기준)
-    const setV = (id, rowIdx) => {
-      const val = parseFloat(rows[rowIdx][1]) || 0;
-      document.getElementById(id).value = val;
-    };
+    // 이미지 예산안 인덱스에 맞춘 매핑
+    const getVal = (r) => parseFloat(rows[r][9].replace(/[^0-9.-]+/g,"")) || 0;
 
-    setV('cost_dev', 8);        // 작품개발비 소계
-    setV('cost_venue_main', 10); // 공연장 대관료
-    setV('cost_venue_prac', 11); // 연습실 대관료
-    setV('cost_cast', 18);       // 인건비(배우)
-    setV('cost_creative', 19);   // 인건비(크리에이티브)
-    setV('cost_tech', 20);       // 인건비(제작/기술)
-    setV('cost_crew', 21);       // 인건비(스탭/크루)
-    setV('cost_stage', 30);      // 무대/소품
-    setV('cost_dress', 31);      // 의상/분장
-    setV('cost_meal', 42);       // 프로덕션 진행비(식대)
-    setV('cost_mktg', 35);       // 홍보마케팅
-    setV('cost_reserve', 46);    // 예비비
+    document.getElementById('cost_dev').value = getVal(9);    // 작품개발 소계 (10행)
+    document.getElementById('cost_venue').value = getVal(14);  // 대관료 소계 (15행)
+    document.getElementById('cost_cast').value = getVal(17);   // 배우 소계 (18행)
+    document.getElementById('cost_prod').value = getVal(28) + getVal(41); // 제작비 + 진행비
+    document.getElementById('cost_mktg').value = getVal(34);   // 홍보마케팅
+    document.getElementById('cost_reserve').value = getVal(45); // 예비비
 
-    document.getElementById('sync-status').innerText = "✅ 구글 시트 데이터 연동 완료";
+    document.getElementById('sync-dot').classList.add('active');
+    document.getElementById('sync-text').innerText = "LIVE: 예산안 연동 중";
     updateAll();
   } catch (e) {
-    document.getElementById('sync-status').innerText = "⚠️ 오프라인 모드 (기본값 사용)";
+    console.error(e);
+    document.getElementById('sync-text').innerText = "연결 실패 (기본값 사용)";
     updateAll();
   }
 }
@@ -129,26 +143,31 @@ function updateAll() {
   const occ = document.getElementById('occ-slider').value;
   document.getElementById('occ-label').innerText = occ;
 
-  const seats = 105;
-  const shows = 14;
+  const seats = 105; // 씨어터쿰 좌석 수
+  const shows = 14;  // 공연 횟수
   
-  // 지출 총액 계산
-  const totalCost = ['cost_dev','cost_venue_main','cost_venue_prac','cost_cast','cost_creative','cost_tech','cost_crew','cost_stage','cost_dress','cost_meal','cost_mktg','cost_reserve']
+  // 1. 총 제작비
+  const totalCost = ['cost_dev','cost_venue','cost_cast','cost_prod','cost_mktg','cost_reserve']
                     .reduce((acc, id) => acc + v(id), 0);
   document.getElementById('total-cost-display').innerText = totalCost.toLocaleString() + "원";
 
-  // 수입 계산
-  const netPerTicket = v('faceValue') * (1 - v('discountRate')/100) * (1 - v('commRate')/100);
-  const paidAudience = Math.round(seats * shows * (occ/100) * (1 - v('invitationRate')/100));
-  const totalRev = paidAudience * netPerTicket;
-  document.getElementById('total-rev-display').innerText = totalRev.toLocaleString() + "원";
+  // 2. 수익 계산
+  const netPerTicket = v('faceValue') * (1 - v('commRate')/100);
+  const totalAudience = seats * shows * (occ/100);
+  const totalRev = totalAudience * netPerTicket;
+  const profit = totalRev - totalCost;
 
-  // BEP 회차 계산
-  const revPerShow = (paidAudience / shows) * netPerTicket;
-  const bepShows = revPerShow > 0 ? totalCost / revPerShow : 0;
-  document.getElementById('bep-display').innerText = bepShows > shows ? "달성불가" : bepShows.toFixed(1);
+  document.getElementById('profit-display').innerText = Math.round(profit).toLocaleString();
+  document.getElementById('profit-display').parentElement.style.color = profit >= 0 ? '#fff' : '#ffb3b3';
+  
+  document.getElementById('rev-per-show-display').innerText = Math.round(totalRev/shows).toLocaleString() + "원";
 
-  drawChart(totalCost, revPerShow, shows);
+  // 3. BEP 회차
+  const revPerShow = (seats * netPerTicket); // 매진 기준 회당 수익
+  const bepShows = totalCost / revPerShow;
+  document.getElementById('bep-display').innerText = bepShows.toFixed(1);
+
+  drawChart(totalCost, totalRev/shows, shows);
 }
 
 let myChart;
@@ -164,15 +183,17 @@ function drawChart(fixed, revPerShow, totalShows) {
     data: {
       labels,
       datasets: [
-        { label: '누적 매출', data: revData, borderColor: '#0F6E56', backgroundColor: '#0F6E56', pointRadius: 2, fill: false },
-        { label: '고정 제작비', data: costData, borderColor: '#993C1D', borderDash: [5, 5], pointRadius: 0, fill: false }
+        { label: '매출', data: revData, borderColor: '#534AB7', borderWidth: 3, pointRadius: 0, fill: false, tension: 0.3 },
+        { label: '제작비', data: costData, borderColor: '#e9ecef', borderDash: [5, 5], borderWidth: 2, pointRadius: 0, fill: false }
       ]
     },
     options: { 
-      responsive: true, 
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } } }
+      scales: { 
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { display: false }
+      }
     }
   });
 }
