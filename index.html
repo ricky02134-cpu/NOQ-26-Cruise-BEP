@@ -7,45 +7,48 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
-    --primary: #534AB7; --cyan: #00B4D8; --error: #FF3B30;
-    --bg: #F2F2F7; --card-bg: #FFFFFF; --text: #1C1C1E;
+    --primary: #534AB7; --cyan: #30B0C7; --error: #FF453A;
+    --bg: #F2F2F7; --card-bg: #FFFFFF; 
+    --text-main: #1C1C1E; /* 너무 짙지 않은 메인 블랙 */
+    --text-sub: #636366;  /* 부드러운 서브 그레이 */
+    --line-gray: #AEAEB2; /* 그래프 및 구분선용 */
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Pretendard", sans-serif; background: var(--bg); color: var(--text); padding: 20px; font-size: 18px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Pretendard", sans-serif; background: var(--bg); color: var(--text-main); padding: 20px; font-size: 18px; }
   .container { max-width: 650px; margin: 0 auto; padding-bottom: 80px; }
   
-  /* 1. 헤더 폰트 통일성 강화 */
-  header { padding: 40px 0 25px; text-align: left; }
-  header h1 { font-size: 28px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+  header { padding: 45px 0 25px; text-align: left; }
+  header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-main); }
   
-  .dash-card { background: var(--primary); color: white; border-radius: 32px; padding: 35px; margin-bottom: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); transition: background-color 0.4s ease; }
-  .dash-label { font-size: 17px; opacity: 0.8; font-weight: 600; margin-bottom: 10px; }
-  .dash-main { font-size: 48px; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; }
+  /* 대시보드 위젯 */
+  .dash-card { background: var(--primary); color: white; border-radius: 32px; padding: 35px; margin-bottom: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+  .dash-label { font-size: 16px; opacity: 0.85; font-weight: 500; margin-bottom: 10px; }
+  .dash-main { font-size: 46px; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; }
   
-  .visual-box { background: rgba(255,255,255,0.15); padding: 25px; border-radius: 24px; margin-top: 10px; }
-  .slider-info { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; }
-  .occ-val { font-size: 24px; font-weight: 800; }
-  .occ-sub { font-size: 15px; opacity: 0.9; font-weight: 500; display: block; margin-top: 4px; }
+  .visual-box { background: rgba(255,255,255,0.12); padding: 25px; border-radius: 26px; margin-top: 10px; }
+  .slider-info { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
+  .occ-val { font-size: 26px; font-weight: 800; }
+  .occ-sub { font-size: 14px; opacity: 0.9; font-weight: 500; display: block; margin-top: 5px; }
   
-  input[type=range] { width: 100%; height: 10px; border-radius: 5px; accent-color: white; cursor: pointer; margin: 15px 0 25px; }
+  input[type=range] { width: 100%; height: 8px; border-radius: 4px; accent-color: white; cursor: pointer; margin: 15px 0 25px; }
   
-  /* 그래프 영역 */
-  .chart-container { background: white; border-radius: 20px; padding: 15px; height: 260px; position: relative; }
-  .bep-summary { font-size: 18px; text-align: center; margin-top: 22px; font-weight: 700; color: white; }
+  /* 그래프 영역 디자인 개선 */
+  .chart-container { background: white; border-radius: 22px; padding: 18px; height: 260px; position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02); }
+  .bep-summary { font-size: 17px; text-align: center; margin-top: 25px; font-weight: 600; color: white; letter-spacing: -0.3px; }
 
-  /* 입력 카드 */
-  .card { background: var(--card-bg); border-radius: 30px; padding: 35px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-  .card-title { font-size: 22px; font-weight: 800; margin-bottom: 25px; letter-spacing: -0.5px; }
+  /* 입력 섹션 카드 */
+  .card { background: var(--card-bg); border-radius: 30px; padding: 35px; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.04); }
+  .card-title { font-size: 20px; font-weight: 700; margin-bottom: 25px; color: var(--text-main); }
   
-  .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
   @media (min-width: 480px) { .grid { grid-template-columns: 1fr 1fr; } }
   
-  .input-item label { display: block; font-size: 15px; color: #636366; margin-bottom: 8px; font-weight: 600; }
-  .input-item input { width: 100%; padding: 18px; border: none; background: #F2F2F7; border-radius: 16px; font-size: 20px; font-weight: 700; transition: all 0.2s; }
-  .input-item input:focus { background: #E5E5EA; outline: none; }
+  .input-item label { display: block; font-size: 14px; color: var(--text-sub); margin-bottom: 10px; font-weight: 600; padding-left: 2px; }
+  .input-item input { width: 100%; padding: 18px; border: none; background: #F2F2F7; border-radius: 16px; font-size: 19px; font-weight: 700; color: var(--text-main); transition: all 0.2s ease; }
+  .input-item input:focus { background: #EBEBEF; outline: none; box-shadow: 0 0 0 4px rgba(0,0,0,0.03); }
 
-  .summary-row { display: flex; justify-content: space-between; padding-top: 25px; margin-top: 25px; border-top: 1px solid #F2F2F7; font-weight: 800; font-size: 22px; }
-  .total-val { color: var(--error); }
+  .summary-row { display: flex; justify-content: space-between; padding-top: 25px; margin-top: 25px; border-top: 1px solid #F2F2F7; font-weight: 700; font-size: 20px; color: var(--text-main); }
+  .total-val { color: var(--error); font-weight: 800; }
 </style>
 </head>
 <body>
@@ -57,7 +60,7 @@
 
   <div class="dash-card" id="main-dash">
     <p class="dash-label">예상 순이익</p>
-    <div class="dash-main"><span id="profit-display">0</span> <span style="font-size: 24px; font-weight: 600;">원</span></div>
+    <div class="dash-main"><span id="profit-display">0</span> <span style="font-size: 22px; font-weight: 600;">원</span></div>
     
     <div class="visual-box">
       <div class="slider-info">
@@ -82,7 +85,7 @@
 
   <div class="card">
     <div class="card-title">💸 지출 예산</div>
-    <div class="grid" id="expense-grid">
+    <div class="grid">
       <div class="input-item"><label>작품 개발비(로열티)</label><input type="text" id="cost_dev" value="1,763,900" oninput="handleInput(this)"></div>
       <div class="input-item"><label>대관료(공연+연습)</label><input type="text" id="cost_venue" value="11,200,000" oninput="handleInput(this)"></div>
       <div class="input-item"><label>배우 인건비</label><input type="text" id="cost_cast" value="6,853,000" oninput="handleInput(this)"></div>
@@ -146,7 +149,6 @@ function updateAll() {
   const totalRev = (currentAudience * netPerTicket) + extraRev;
   const profit = totalRev - totalCost;
 
-  // 2. 색상 동기화 변수
   const statusColor = profit >= 0 ? 'var(--cyan)' : 'var(--error)';
   document.getElementById('profit-display').innerText = Math.round(profit).toLocaleString();
   document.getElementById('main-dash').style.backgroundColor = statusColor;
@@ -170,21 +172,23 @@ function updateChart(fixedCost, netPerTicket, extraRev, maxAudience, currentAudi
         {
           label: '매출 합계',
           data: [{x: 0, y: extraRev}, {x: maxAudience, y: extraRev + (maxAudience * netPerTicket)}],
-          borderColor: statusColor, // 슬라이더 상태에 따라 선 색상 변경
-          borderWidth: 4, pointRadius: 0, tension: 0, showLine: true
+          borderColor: statusColor, // 슬라이더 상태에 따라 유동적으로 변경
+          borderWidth: 3.5, pointRadius: 0, tension: 0, showLine: true
         },
         {
-          label: '고정 지출',
+          label: '지출 예산',
           data: [{x: 0, y: fixedCost}, {x: maxAudience, y: fixedCost}],
-          borderColor: '#000000', // 2. 검정색 실선으로 변경
-          borderWidth: 2, pointRadius: 0, showLine: true
+          borderColor: '#8E8E93', // 톤다운된 세컨더리 그레이
+          borderWidth: 2, 
+          borderDash: [6, 4], // 점선으로 변경하여 구분감 확보
+          pointRadius: 0, showLine: true
         },
         {
           label: '현재 위치',
           data: [{x: currentAudience, y: currentRev}],
           pointBackgroundColor: '#FFF', 
-          pointBorderColor: statusColor, // 2. 점 색상도 동기화
-          pointRadius: 9, pointBorderWidth: 4, showLine: false
+          pointBorderColor: statusColor, 
+          pointRadius: 8, pointBorderWidth: 4, showLine: false
         }
       ]
     },
@@ -194,30 +198,29 @@ function updateChart(fixedCost, netPerTicket, extraRev, maxAudience, currentAudi
       scales: {
         x: { 
           type: 'linear', min: 0, max: maxAudience, 
-          title: { display: true, text: '총 관객 수 (명)', font: { size: 12, weight: 'bold' } },
-          grid: { display: false } 
+          title: { display: true, text: '총 관객 수 (명)', font: { size: 11, weight: '600' }, color: '#8E8E93' },
+          grid: { display: false },
+          ticks: { color: '#AEAEB2' }
         },
         y: { 
-          display: true, // 3. Y축 표시
-          position: 'right',
-          ticks: { callback: (v) => v.toLocaleString(), font: { size: 9 } },
-          title: { display: true, text: '총 매출 (원)', font: { size: 10 } }
+          display: true, position: 'right',
+          ticks: { 
+            callback: (v) => v.toLocaleString(), 
+            font: { size: 9 },
+            color: '#AEAEB2'
+          },
+          grid: { color: '#F2F2F7' }
         }
       },
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: 'rgba(28, 28, 30, 0.9)',
+          padding: 12,
+          cornerRadius: 10,
+          displayColors: false,
           callbacks: {
-            // 4. 툴팁 단위 및 명칭 변경
-            label: function(context) {
-              if (context.datasetIndex === 2) {
-                return [
-                  `관객: ${context.parsed.x.toLocaleString()}명`,
-                  `매출: ${Math.round(context.parsed.y).toLocaleString()}원`
-                ];
-              }
-              return null;
-            }
+            label: (ctx) => ctx.datasetIndex === 2 ? [`관객: ${ctx.parsed.x.toLocaleString()}명`, `매출: ${Math.round(ctx.parsed.y).toLocaleString()}원`] : null
           }
         }
       }
